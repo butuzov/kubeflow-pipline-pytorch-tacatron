@@ -1,0 +1,74 @@
+#!/bin/env sh
+
+
+while [ $# -gt 0 ]; do
+  # printf "[%s]\n" $1
+  case "$1" in
+    --url=*)
+      url="${1#*=}"
+      ;;
+    --directory=*)
+      directory="${1#*=}"
+      ;;
+    *)
+      printf "Error: Invalid argument.\n"
+      exit 1
+  esac
+  shift
+done
+
+
+
+if [[ ! -d  "${directory}" ]]; then
+    printf " Error: Directory %f not found.\n" $directory
+    ls -la $directory
+    exit 1
+fi
+
+# echo $url
+
+__BASE__=$directory
+__DIR__="${__BASE__}/dataset"
+
+if [[ ! -d "${__DIR__}" ]]; then
+    mkdir "${__DIR__}"
+    echo "Created", $?
+fi
+
+__FILE__=$(basename $url)
+CONTENTS=$(ls -l "${__DIR__}" | wc -l)
+
+if [[ "${CONTENTS}" -eq "1" ]]; then
+
+    if [[ ! -f "${__BASE__}/${__FILE__}" ]]; then
+        cd "${__BASE__}"
+        printf "Download %s\n" $url
+        wget $url
+    else
+        echo "Found ${__FILE__}"
+    fi
+
+    echo ${__BASE__}/${__FILE__}
+    case "$__FILE__" in
+        *tar.gz*)
+            tar zxf "${__BASE__}/${__FILE__}" -C "${__DIR__}"
+            ;;
+        *tar.bz2*)
+            tar jxf "${__BASE__}/${__FILE__}" -C "${__DIR__}"
+            ;;
+        *)
+        printf "Error: unknown archive.\n"
+        exit 1
+    esac
+
+    mv ${__DIR__}/${__FILE__/.tar*/}/* ${__DIR__}
+    rmdir ${__DIR__}/${__FILE__/.tar*/}/
+fi
+
+
+
+
+
+#   mv "${__DIR__}/${__FILE__/.tar*/}/*" "${__DIR__}"
+#     # rmdir "${__BASE__}/${__FILE__/.tar.*/""}/"
+#     echo "ok!"
